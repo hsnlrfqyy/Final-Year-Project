@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFID Smart Parking - Dashboard (Mobile)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding-bottom: 60px; /* For bottom nav */
+    }
+
+    /* Header */
+    .header {
+      background: #4f46e5;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      height: 32px;
+      width: 32px;
+      border-radius: 6px;
+      background: white;
+      padding: 4px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Add to the .profile-btn styles */
+    .profile-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background: #f5f5f5;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden; /* Important to contain the image */
+      padding: 0; /* Remove any padding */
+    }
+
+    /* Style for the profile image inside the button */
+    .profile-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* This ensures the image covers the circle nicely */
+      display: block;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 16px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #1f2937;
+    }
+
+    /* Filters Row */
+    .filters-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      flex: 1;
+    }
+
+    .filter-label {
+      display: block;
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: white;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-card.parked .stat-value { color: #3c4350; }
+    .stat-card.available .stat-value { color: #3c4350; }
+    .stat-card.alerts .stat-value { color: #3c4350; }
+    .stat-card.entries .stat-value { color: #3c4350; }
+
+    .stat-description {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* System Status Card */
+    .system-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .system-info h3 {
+      font-size: 16px;
+      color: #1f2937;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .system-info p {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .system-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .system-status.operational {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .system-status.error {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Chart Section */
+    .chart-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .chart-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 280px;
+      width: 100%;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top: 1px solid #e5e7eb;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: #6b7280;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .nav-item.active {
+      color: #4f46e5;
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Profile Dropdown */
+    .profile-menu {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-width: 150px;
+      z-index: 101;
+    }
+
+    .profile-menu.show {
+      display: block;
+    }
+
+    .profile-menu a {
+      display: block;
+      padding: 14px 20px;
+      text-decoration: none;
+      color: #374151;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .profile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .profile-menu a:hover {
+      background: #f9fafb;
+    }
+
+    /* Loading States */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .loading-value {
+      background: #f3f4f6;
+      color: transparent;
+      border-radius: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Legend for Chart */
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <img src="images/fyp-logo.png" alt="Logo" class="header-logo">
+      <span class="header-title">Dashboard</span>
+    </div>
+    <div class="profile-btn" id="profileBtn">
+      <img src="images/profile.png" alt="profile">
+    </div>
+    <div class="profile-menu" id="profileMenu">
+      <a href="LoginPage_mobile.html">Logout</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 class="page-title">Dashboard Overview</h1>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <div class="filter-group">
+        <label class="filter-label">Date Range</label>
+        <select id="dateRange" class="filter-select">
+          <option value="30">Last 30 Days</option>
+          <option value="7" selected>Last 7 Days</option>
+          <option value="1">Today</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">User Type</label>
+        <select id="userType" class="filter-select">
+          <option value="all">All Users</option>
+          <option value="Staff">Staff</option>
+          <option value="Student">Students</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card parked">
+        <h3>Parked Vehicles</h3>
+        <div id="totalParked" class="stat-value loading-value">—</div>
+        <div class="stat-description">Vehicles in Campus</div>
+      </div>
+      <div class="stat-card available">
+        <h3>Available Parking Spots</h3>
+        <div id="availableSpots" class="stat-value loading-value">—</div>
+        <div class="stat-description">Overall Parking Records</div>
+      </div>
+      <div class="stat-card alerts">
+        <h3>Active Alerts</h3>
+        <div id="activeAlerts" class="stat-value loading-value">—</div>
+        <div class="stat-description">Recorded Violations</div>
+      </div>
+      <div class="stat-card entries">
+        <h3>Recent Entries</h3>
+        <div id="recentAccesses" class="stat-value loading-value">—</div>
+        <div class="stat-description">Recorded Entries</div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="system-card">
+      <div class="system-info">
+        <h3>System Health</h3>
+        <p>Firestore connection status</p>
+      </div>
+      <div id="systemHealth" class="system-status operational">
+        Operational
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3 class="chart-title">Parking Occupancy Trend</h3>
+      </div>
+      <p class="chart-subtitle">Each line represents a Kulliyyah</p>
+      <div class="chart-container">
+        <canvas id="occupancyTrend"></canvas>
+      </div>
+      <div class="chart-legend" id="chartLegend">
+        <!-- Legend will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="Dashboard_mobile.html" class="nav-item active">
+      <div class="nav-icon">📊</div>
+      <span>Dashboard</span>
+    </a>
+    <a href="VehicleInfo_mobile.html" class="nav-item">
+      <div class="nav-icon">🚗</div>
+      <span>Vehicles</span>
+    </a>
+    <a href="Alerts_mobile.html" class="nav-item">
+      <div class="nav-icon">⚠️</div>
+      <span>Alerts</span>
+    </a>
+    <a href="Reports_mobile.html" class="nav-item">
+      <div class="nav-icon">📈</div>
+      <span>Reports</span>
+    </a>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZEK8mhES6mTDQYLvG3PVSGzuYwfCyx-Q",
+      authDomain: "iium-parking-database.firebaseapp.com",
+      projectId: "iium-parking-database",
+      storageBucket: "iium-parking-database.firebasestorage.app",
+      messagingSenderId: "73399677515",
+      appId: "1:73399677515:web:e8fb4cb0738a0007dd93ce",
+      measurementId: "G-GZ17Y9RC9Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Zones (Kulliyyahs)
+    const ZONES = ["KICT", "KOE", "KOED", "CELPAD", "AIKOL", "KENMS", "KAED", "IRKHS"];
+
+    // Color palette for chart
+    const PALETTE = ['#2563eb', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#fb923c', '#64748b'];
+
+    // DOM Elements
+    const profileBtn = document.getElementById('profileBtn');
+    const profileMenu = document.getElementById('profileMenu');
+    const dateRangeEl = document.getElementById('dateRange');
+    const userTypeEl = document.getElementById('userType');
+    const totalParkedEl = document.getElementById('totalParked');
+    const availableSpotsEl = document.getElementById('availableSpots');
+    const activeAlertsEl = document.getElementById('activeAlerts');
+    const recentAccessesEl = document.getElementById('recentAccesses');
+    const systemHealthEl = document.getElementById('systemHealth');
+    const chartLegend = document.getElementById('chartLegend');
+
+    // Data caches
+    let sessions = [];
+    let alerts = [];
+    let occupancyChart = null;
+
+    // System health tracking
+    let sessionsListenerActive = false;
+    let alertsListenerActive = false;
+
+    // Helper functions
+    function tsToDate(ts) {
+      if (!ts) return null;
+      if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+      const d = new Date(ts);
+      return isNaN(d) ? null : d;
+    }
+
+    function sessionRepresentativeDate(s) {
+      return tsToDate(s.entry_time) || tsToDate(s.exit_time) || null;
+    }
+
+    function buildDateList(daysCount) {
+      const out = [];
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        out.push(new Date(d));
+      }
+      return out;
+    }
+
+    function formatLabel(d) {
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    }
+
+    // Update system status display
+    function updateSystemStatus() {
+      if (sessionsListenerActive && alertsListenerActive) {
+        systemHealthEl.textContent = 'Operational';
+        systemHealthEl.className = 'system-status operational';
+      } else {
+        systemHealthEl.textContent = 'Error';
+        systemHealthEl.className = 'system-status error';
+      }
+    }
+
+    // Update chart legend
+    function updateChartLegend() {
+      chartLegend.innerHTML = ZONES.map((zone, i) => `
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: ${PALETTE[i % PALETTE.length]}"></div>
+          <span>${zone}</span>
+        </div>
+      `).join('');
+    }
+
+    // Main computation and rendering
+    function computeAndRender() {
+      try {
+        const dr = Number(dateRangeEl.value) || 7;
+        const now = new Date();
+        const earliest = new Date();
+        earliest.setHours(0, 0, 0, 0);
+        earliest.setDate(earliest.getDate() - (dr - 1));
+        const userFilter = userTypeEl.value;
+
+        // Filter sessions
+        const filteredSessions = sessions.filter(s => {
+          const rep = sessionRepresentativeDate(s);
+          if (!rep) return false;
+          if (rep < earliest || rep > now) return false;
+          if (userFilter !== 'all' && ((s.owner_type || s.ownerType || '') !== userFilter)) return false;
+          return true;
+        });
+
+        // Calculate metrics
+        const totalParked = filteredSessions.filter(s => !s.exit_time).length;
+        const capacity = 1000;
+        const available = Math.max(0, capacity - totalParked);
+
+        const filteredAlerts = alerts.filter(a => {
+          const t = tsToDate(a.timestamp);
+          if (t) {
+            if (t < earliest || t > now) return false;
+          }
+          return (a.status || '').toLowerCase() === 'active';
+        });
+
+        const activeAlertCount = filteredAlerts.length;
+        const recentCount = filteredSessions.length;
+
+        // Update DOM
+        totalParkedEl.textContent = totalParked;
+        availableSpotsEl.textContent = available;
+        activeAlertsEl.textContent = activeAlertCount;
+        recentAccessesEl.textContent = recentCount;
+
+        // Remove loading animation classes
+        [totalParkedEl, availableSpotsEl, activeAlertsEl, recentAccessesEl].forEach(el => {
+          el.classList.remove('loading-value');
+        });
+
+        // Prepare chart data
+        const days = buildDateList(dr);
+        const dateKeys = days.map(d => d.toISOString().slice(0, 10));
+        const zoneSeries = {};
+        ZONES.forEach(z => zoneSeries[z] = dateKeys.map(() => 0));
+
+        filteredSessions.forEach(s => {
+          const e = tsToDate(s.entry_time);
+          if (!e) return;
+          const key = e.toISOString().slice(0, 10);
+          const idx = dateKeys.indexOf(key);
+          if (idx === -1) return;
+          const zone = (s.assigned_zone || s.zone || '').toString();
+          if (ZONES.includes(zone)) zoneSeries[zone][idx] += 1;
+        });
+
+        // Update or create chart
+        const labels = days.map(formatLabel);
+        const datasets = ZONES.map((zone, i) => ({
+          label: zone,
+          data: zoneSeries[zone],
+          borderColor: PALETTE[i % PALETTE.length],
+          backgroundColor: PALETTE[i % PALETTE.length] + '20',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: PALETTE[i % PALETTE.length],
+          borderWidth: 2
+        }));
+
+        if (!occupancyChart) {
+          const ctx = document.getElementById('occupancyTrend').getContext('2d');
+          occupancyChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: { display: false }, // We'll use custom legend
+                tooltip: { mode: 'index', intersect: false }
+              },
+              scales: {
+                x: {
+                  grid: { display: false }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 },
+                  grid: { color: '#f3f4f6' }
+                }
+              }
+            }
+          });
+          updateChartLegend();
+        } else {
+          occupancyChart.data.labels = labels;
+          occupancyChart.data.datasets = datasets;
+          occupancyChart.update();
+        }
+      } catch (err) {
+        console.error("computeAndRender error:", err);
+      }
+    }
+
+    // Profile dropdown
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => {
+      profileMenu.classList.remove('show');
+    });
+
+    // Filter event listeners
+    dateRangeEl.addEventListener('change', computeAndRender);
+    userTypeEl.addEventListener('change', computeAndRender);
+
+    // Firebase real-time listeners
+    // PARKING_SESSION listener
+    try {
+      const sessionsRef = collection(db, 'PARKING_SESSION');
+      onSnapshot(sessionsRef, snapshot => {
+        sessionsListenerActive = true;
+        updateSystemStatus();
+        sessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        sessions.sort((a, b) => (b.entry_time?.seconds || 0) - (a.entry_time?.seconds || 0));
+        computeAndRender();
+      }, err => {
+        console.error('PARKING_SESSION snapshot error:', err);
+        sessionsListenerActive = false;
+        updateSystemStatus();
+      });
+    } catch (e) {
+      console.error('PARKING_SESSION listener failed:', e);
+      sessionsListenerActive = false;
+      updateSystemStatus();
+    }
+
+    // ALERTS listener
+    try {
+      const alertsRef = collection(db, 'ALERTS');
+      onSnapshot(alertsRef, snapshot => {
+        alertsListenerActive = true;
+        updateSystemStatus();
+        alerts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        alerts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        computeAndRender();
+      }, err => {
+        console.error('ALERTS snapshot error:', err);
+        alertsListenerActive = false;
+        updateSystemStatus();
+      });
+    } catch (e) {
+      console.error('ALERTS listener failed:', e);
+      alertsListenerActive = false;
+      updateSystemStatus();
+    }
+
+    // Initial render
+    computeAndRender();
+  </script>
+</body>
+</html>

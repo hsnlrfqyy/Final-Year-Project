@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Data Tools</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7fb;
+      padding: 28px;
+    }
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(20,20,50,0.08);
+      max-width: 860px;
+    }
+    h1 { margin: 0 0 6px; }
+    .note {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 12px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 140px;
+    }
+    button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-primary { background: #2563eb; }
+    .btn-danger { background: #dc2626; }
+    .btn-warning { background: #f59e0b; }
+    .btn-info { background: #16a34a; }
+    pre {
+      background: #0b1220;
+      color: #e6eef8;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Admin Data Tools</h1>
+    <p class="note">
+      Alert generation and parking session testing utilities.
+    </p>
+
+    <!-- ALERT GENERATION -->
+    <div class="row">
+      <label>Alert Records:</label>
+      <input id="count" type="number" value="300" min="1">
+      <button id="generateBtn" class="btn-primary">Generate Mixed Alerts</button>
+      <button id="deleteBtn" class="btn-danger">Delete ALL Alerts</button>
+    </div>
+
+    <!-- NEW FEATURE -->
+    <div class="row">
+      <button id="addUnauthorizedBtn" class="btn-info">
+        Add 35 Unauthorized Access Alerts
+      </button>
+    </div>
+
+    <!-- PARKING SESSION TOOLS -->
+    <div class="row">
+      <button id="addOngoingBtn" class="btn-warning">
+        Add 10 Ongoing Parking Sessions
+      </button>
+      <button id="deleteNullExitBtn" class="btn-danger">
+        Delete Ongoing Sessions
+      </button>
+    </div>
+
+    <div class="row">
+      <span id="status" class="note"></span>
+    </div>
+
+    <pre id="log">Log: Ready.</pre>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    doc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZEK8mhES6mTDQYLvG3PVSGzuYwfCyx-Q",
+    authDomain: "iium-parking-database.firebaseapp.com",
+    projectId: "iium-parking-database"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const ALERTS_COLLECTION = "ALERTS";
+  const PARKING_COLLECTION = "PARKING_SESSION";
+
+  const logEl = document.getElementById("log");
+  const statusEl = document.getElementById("status");
+
+  function log(msg, replace=false) {
+    const t = new Date().toLocaleTimeString();
+    logEl.textContent = replace
+      ? `Log [${t}]: ${msg}`
+      : logEl.textContent + `\n[${t}] ${msg}`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  /* ========= POOLS ========= */
+  const ZONES = ["KICT","KOE","KOED","CELPAD","AIKOL","KENMS","IRKHS","KAED"];
+  const VEHICLE_POOL_SIZE = 140;
+  const vehiclePool = [];
+
+  function generateVehicleID() {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const L = Array.from({length:3}, () => letters[Math.floor(Math.random()*26)]).join("");
+    const D = Math.floor(1000 + Math.random() * 9000);
+    return `${L}${D}`;
+  }
+
+  for (let i = 0; i < VEHICLE_POOL_SIZE; i++) {
+    vehiclePool.push(generateVehicleID());
+  }
+
+  function randomVehicle() {
+    return vehiclePool[Math.floor(Math.random() * vehiclePool.length)];
+  }
+
+  function randomZone() {
+    return ZONES[Math.floor(Math.random() * ZONES.length)];
+  }
+
+  function randomStatus() {
+    return Math.random() < 0.99
+      ? "Active"
+      : Math.random() < 0.5 ? "Resolved" : "Acknowledged";
+  }
+
+  function randomTimestamp() {
+    const start = new Date("2025-12-20T00:00:00").getTime();
+    const end = new Date("2026-02-15T23:59:59").getTime();
+    return new Date(start + Math.random() * (end - start));
+  }
+
+  /* ========= ADD 35 UNAUTHORIZED ACCESS ALERTS ========= */
+
+  async function addUnauthorizedAccessAlerts() {
+    if (!confirm("Add 35 Unauthorized Access alerts with LOW severity?")) return;
+
+    log("Adding 35 Unauthorized Access alerts...", true);
+
+    try {
+      for (let i = 0; i < 35; i++) {
+        await addDoc(collection(db, ALERTS_COLLECTION), {
+          vehicle_id: randomVehicle(),
+          assigned_zone: randomZone(),
+          email: "random@gmail.com",
+          violation_type: "Unauthorized Access",
+          severity: "Low",
+          status: randomStatus(),
+          timestamp: randomTimestamp()
+        });
+
+        log(`Unauthorized alert ${i + 1} added`);
+      }
+
+      statusEl.textContent = "✅ 35 Unauthorized Access alerts added";
+      log("Finished adding unauthorized access alerts");
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "❌ Error adding unauthorized alerts";
+      log(`ERROR: ${err.message}`);
+    }
+  }
+
+  /* ========= MIXED ALERT GENERATOR ========= */
+
+  function randomViolation() {
+    return Math.random() < 0.7
+      ? "Unauthorized Access"
+      : "Overtime Parking";
+  }
+
+  function severityFromViolation(type) {
+    if (type === "Unauthorized Access") return "Low";
+    return Math.random() < 0.8 ? "Medium" : "High";
+  }
+
+  async function generateData(n) {
+    statusEl.textContent = "Generating alerts...";
+    log(`Generating ${n} ALERT records`, true);
+
+    try {
+      const batch = [];
+
+      for (let i = 0; i < n; i++) {
+        const violation = randomViolation();
+        const record = {
+          assigned_zone: randomZone(),
+          email: "random@gmail.com",
+          violation_type: violation,
+          severity: severityFromViolation(violation),
+          status: randomStatus(),
+          timestamp: randomTimestamp(),
+          vehicle_id: randomVehicle()
+        };
+
+        batch.push(addDoc(collection(db, ALERTS_COLLECTION), record));
+
+        if (batch.length >= 25) {
+          await Promise.all(batch.splice(0));
+          log(`Inserted ${i + 1}`);
+        }
+      }
+
+      if (batch.length) await Promise.all(batch);
+
+      statusEl.textContent = `✅ Generated ${n} mixed alerts`;
+      log("Finished generating mixed alerts");
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "❌ Error generating alerts";
+      log(`ERROR: ${err.message}`);
+    }
+  }
+
+  async function deleteAllAlerts() {
+    if (!confirm("⚠ Delete ALL ALERT records?")) return;
+
+    log("Deleting all alerts...", true);
+    const snap = await getDocs(collection(db, ALERTS_COLLECTION));
+
+    for (const d of snap.docs) {
+      await deleteDoc(doc(db, ALERTS_COLLECTION, d.id));
+    }
+
+    statusEl.textContent = `🗑 Deleted ${snap.size} alerts`;
+    log(`Deleted ${snap.size} alert records`);
+  }
+
+  /* ========= PARKING SESSION TOOLS ========= */
+
+  async function addOngoingSessions() {
+    if (!confirm("Add 10 parking sessions with NULL exit_time?")) return;
+
+    log("Adding 10 ongoing parking sessions...", true);
+
+    for (let i = 0; i < 10; i++) {
+      const hoursAgo = Math.floor(Math.random() * 24 * 20);
+      const entryTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+
+      await addDoc(collection(db, PARKING_COLLECTION), {
+        vehicle_id: randomVehicle(),
+        assigned_zone: randomZone(),
+        email: "random@gmail.com",
+        entry_time: entryTime,
+        exit_time: null
+      });
+
+      log(`Ongoing session ${i + 1} added`);
+    }
+
+    statusEl.textContent = "✅ 10 ongoing parking sessions added";
+  }
+
+  async function deleteNullExitTime() {
+    if (!confirm("⚠ Delete ALL parking sessions with NULL exit_time?")) return;
+
+    log("Deleting parking sessions with null exit_time...", true);
+
+    const snap = await getDocs(collection(db, PARKING_COLLECTION));
+    let deleted = 0;
+
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (data.exit_time === null || data.exit_time === undefined) {
+        await deleteDoc(doc(db, PARKING_COLLECTION, d.id));
+        deleted++;
+      }
+    }
+
+    statusEl.textContent = `🗑 Deleted ${deleted} ongoing parking sessions`;
+    log(`Deleted ${deleted} parking session records`);
+  }
+
+  /* ========= BUTTON EVENTS ========= */
+
+  document.getElementById("generateBtn").onclick = () => {
+    const n = parseInt(document.getElementById("count").value, 10);
+    if (n > 0) generateData(n);
+  };
+
+  document.getElementById("deleteBtn").onclick = deleteAllAlerts;
+  document.getElementById("addUnauthorizedBtn").onclick = addUnauthorizedAccessAlerts;
+  document.getElementById("addOngoingBtn").onclick = addOngoingSessions;
+  document.getElementById("deleteNullExitBtn").onclick = deleteNullExitTime;
+
+</script>
+</body>
+</html>

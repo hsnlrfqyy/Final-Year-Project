@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFID Smart Parking - Reports (Mobile)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding-bottom: 70px; /* Space for bottom nav */
+    }
+
+    /* Header */
+    .mobile-header {
+      background: #4f46e5;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      height: 32px;
+      width: 32px;
+      border-radius: 6px;
+      background: white;
+      padding: 4px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+.profile-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #f5f5f5;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden; /* Important to contain the image */
+  padding: 0; /* Remove any padding */
+}
+
+/* Style for the profile image inside the button */
+.profile-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* This ensures the image covers the circle nicely */
+  display: block;
+}
+
+    /* Profile Menu */
+    .profile-menu {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-width: 150px;
+      z-index: 101;
+    }
+
+    .profile-menu.show {
+      display: block;
+    }
+
+    .profile-menu a {
+      display: block;
+      padding: 14px 20px;
+      text-decoration: none;
+      color: #374151;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .profile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .profile-menu a:hover {
+      background: #f9fafb;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 16px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    /* Filter Section */
+    .filters-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .filters-section h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #374151;
+    }
+
+    .filter-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-item label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    .filter-select {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 15px;
+      background: white;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+
+    /* Export Buttons */
+    .export-section {
+      display: flex;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .export-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .export-btn:active {
+      transform: scale(0.98);
+    }
+
+    .export-btn.csv {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .export-btn.pdf {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .export-icon {
+      font-size: 18px;
+    }
+
+    /* Stats Cards */
+    .stats-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .stat-note {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .stat-card.sessions .stat-value { color: #232227; }
+    .stat-card.duration .stat-value { color: #232227; }
+    .stat-card.enforcement .stat-value { color: #232227; }
+
+    /* Charts Section */
+    .charts-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .chart-container h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #374151;
+      text-align: center;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top: 1px solid #e5e7eb;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: #6b7280;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .nav-item.active {
+      color: #4f46e5;
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #4f46e5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #1f2937;
+    }
+
+    .modal-message {
+      margin-bottom: 24px;
+      color: #4b5563;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-btn.cancel {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .modal-btn.confirm {
+      background: #4f46e5;
+      color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="mobile-header">
+    <div class="header-left">
+      <img src="images/fyp-logo.png" alt="Logo" class="header-logo">
+      <span class="header-title">Reports</span>
+    </div>
+    <div class="profile-btn" id="profileBtn">
+      <img src="images/profile.png" alt="profile">
+    </div>
+    <div class="profile-menu" id="profileMenu">
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 class="page-title">Parking Reports</h1>
+    <p class="page-subtitle">Generate and analyze parking system reports</p>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <h3>Filter Reports</h3>
+      <div class="filter-group">
+        <div class="filter-item">
+          <label for="dateRange">Date Range</label>
+          <select id="dateRange" class="filter-select">
+            <option value="1">Today</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+        </div>
+        
+        <div class="filter-item">
+          <label for="zone">Zone</label>
+          <select id="zone" class="filter-select">
+            <option value="all">All Zones</option>
+            <option value="KICT">KICT</option>
+            <option value="KOE">KOE</option>
+            <option value="KOED">KOED</option>
+            <option value="IRKHS">IRKHS</option>
+            <option value="CELPAD">CELPAD</option>
+            <option value="AIKOL">AIKOL</option>
+            <option value="KENMS">KENMS</option>
+            <option value="KAED">KAED</option>
+          </select>
+        </div>
+        
+        <div class="filter-item">
+          <label for="userType">User Type</label>
+          <select id="userType" class="filter-select">
+            <option value="all">All Users</option>
+            <option value="Student">Student</option>
+            <option value="Staff">Staff</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="export-section">
+      <button class="export-btn csv" id="exportCsvBtn">
+        <span>Export CSV</span>
+      </button>
+      <button class="export-btn pdf" id="exportPdfBtn">
+        <span>Export PDF</span>
+      </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-section">
+      <div class="stat-card sessions">
+        <h3>Total Parking Sessions</h3>
+        <div class="stat-value" id="totalSessions">-</div>
+        <p class="stat-note" id="sessionsNote">Currently Parked</p>
+      </div>
+      
+      <div class="stat-card duration">
+        <h3>Average Session Duration</h3>
+        <div class="stat-value" id="avgDuration">-</div>
+        <p class="stat-note">Across completed sessions</p>
+      </div>
+      
+      <div class="stat-card enforcement">
+        <h3>Enforcement Actions</h3>
+        <div class="stat-value" id="enforcementCount">-</div>
+        <p class="stat-note">Active Alerts</p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-section">
+      <div class="chart-container">
+        <h3>Parking Session Trend</h3>
+        <div class="chart-wrapper">
+          <canvas id="sessionTrend"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <h3>Violation Type Distribution</h3>
+        <div class="chart-wrapper">
+          <canvas id="eventDistribution"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div class="modal" id="exportModal">
+    <div class="modal-content">
+      <h2 class="modal-title" id="modalTitle">Export Report</h2>
+      <p class="modal-message" id="modalMessage">Preparing your report for download...</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="cancelExport">Cancel</button>
+        <button class="modal-btn confirm" id="confirmExport">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="Dashboard_mobile.html" class="nav-item">
+      <div class="nav-icon">📊</div>
+      <span>Dashboard</span>
+    </a>
+    <a href="VehicleInfo_mobile.html" class="nav-item">
+      <div class="nav-icon">🚗</div>
+      <span>Vehicles</span>
+    </a>
+    <a href="Alerts_mobile.html" class="nav-item">
+      <div class="nav-icon">⚠️</div>
+      <span>Alerts</span>
+    </a>
+    <a href="Reports_mobile.html" class="nav-item active">
+      <div class="nav-icon">📈</div>
+      <span>Reports</span>
+    </a>
+  </div>
+
+  <!-- Libraries (loaded from CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZEK8mhES6mTDQYLvG3PVSGzuYwfCyx-Q",
+      authDomain: "iium-parking-database.firebaseapp.com",
+      projectId: "iium-parking-database",
+      storageBucket: "iium-parking-database.firebasestorage.app",
+      messagingSenderId: "73399677515",
+      appId: "1:73399677515:web:e8fb4cb0738a0007dd93ce",
+      measurementId: "G-GZ17Y9RC9Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // DOM Elements
+    const profileBtn = document.getElementById('profileBtn');
+    const profileMenu = document.getElementById('profileMenu');
+    const logoutLink = document.getElementById('logoutLink');
+    const dateRangeSelect = document.getElementById('dateRange');
+    const zoneSelect = document.getElementById('zone');
+    const userTypeSelect = document.getElementById('userType');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const totalSessionsEl = document.getElementById('totalSessions');
+    const avgDurationEl = document.getElementById('avgDuration');
+    const enforcementCountEl = document.getElementById('enforcementCount');
+    const exportModal = document.getElementById('exportModal');
+    const cancelExportBtn = document.getElementById('cancelExport');
+    const confirmExportBtn = document.getElementById('confirmExport');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+
+    let trendChart = null;
+    let pieChart = null;
+    let sessions = [];
+    let alerts = [];
+    let exportType = ''; // 'csv' or 'pdf'
+    let exportData = null;
+
+    // Profile dropdown
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => {
+      profileMenu.classList.remove('show');
+    });
+
+    // Logout handler
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Clear the session storage
+      sessionStorage.removeItem('userLoggedIn');
+      sessionStorage.removeItem('username');
+      
+      // Hide the dropdown menu
+      profileMenu.classList.remove('show');
+      
+      // Redirect to login page
+      window.location.href = "LoginPage_mobile.html";
+    });
+
+    // Modal handlers
+    cancelExportBtn.addEventListener('click', () => {
+      exportModal.style.display = 'none';
+    });
+
+    confirmExportBtn.addEventListener('click', () => {
+      exportModal.style.display = 'none';
+      if (exportType === 'csv') {
+        exportCSV(exportData);
+      } else if (exportType === 'pdf') {
+        exportPDF(exportData);
+      }
+    });
+
+    // Utility functions
+    function tsToDate(ts) {
+      if (!ts) return null;
+      if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+      return new Date(ts);
+    }
+
+    function formatDurationMinutes(minutes) {
+      if (isNaN(minutes) || minutes === 0) return '0m';
+      const hours = Math.floor(minutes / 60);
+      const mins = Math.round(minutes % 60);
+      return hours ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+
+    function startOfDay(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function daysAgoDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() - (days - 1));
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function formatDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    // Compute statistics based on filters
+    function computeStats() {
+      const dateRange = dateRangeSelect.value;
+      const zoneFilter = zoneSelect.value;
+      const userTypeFilter = userTypeSelect.value;
+
+      // Determine earliest date
+      let earliest = null;
+      if (dateRange !== 'all') {
+        earliest = daysAgoDate(parseInt(dateRange));
+      }
+
+      // Filter sessions
+      const filteredSessions = sessions.filter(s => {
+        const entryTime = tsToDate(s.entry_time);
+        if (!entryTime) return false;
+        
+        if (earliest && entryTime < earliest) return false;
+        if (zoneFilter !== 'all' && s.assigned_zone !== zoneFilter) return false;
+        if (userTypeFilter !== 'all' && s.owner_type !== userTypeFilter) return false;
+        
+        return true;
+      });
+
+      // Filter alerts
+      const filteredAlerts = alerts.filter(a => {
+        const timestamp = tsToDate(a.timestamp);
+        if (earliest && (!timestamp || timestamp < earliest)) return false;
+        if (zoneFilter !== 'all' && a.assigned_zone !== zoneFilter) return false;
+        return true;
+      });
+
+      // Calculate statistics
+      const currentlyParked = filteredSessions.filter(s => !s.exit_time).length;
+      
+      const completedSessions = filteredSessions.filter(s => s.entry_time && s.exit_time);
+      const durationsMinutes = completedSessions.map(s => {
+        const entry = tsToDate(s.entry_time);
+        const exit = tsToDate(s.exit_time);
+        if (!entry || !exit) return NaN;
+        return (exit - entry) / (1000 * 60);
+      }).filter(v => !isNaN(v) && v >= 0);
+      
+      const avgMinutes = durationsMinutes.length > 0 
+        ? durationsMinutes.reduce((a, b) => a + b, 0) / durationsMinutes.length 
+        : NaN;
+
+      // Update UI
+      totalSessionsEl.textContent = currentlyParked;
+      avgDurationEl.textContent = Number.isFinite(avgMinutes) ? formatDurationMinutes(avgMinutes) : '-';
+      enforcementCountEl.textContent = filteredAlerts.length;
+
+      // Update charts
+      updateCharts(filteredSessions, filteredAlerts, dateRange);
+
+      return {
+        filteredSessions,
+        filteredAlerts,
+        avgMinutes,
+        dateRange,
+        zoneFilter,
+        userTypeFilter
+      };
+    }
+
+    // Update charts
+    function updateCharts(sessions, alerts, dateRange) {
+      // Session trend chart
+      const dayCount = dateRange === 'all' ? 30 : Math.min(parseInt(dateRange), 90);
+      const days = [];
+      
+      for (let i = dayCount - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        days.push(d);
+      }
+      
+      const trendCounts = days.map(day => {
+        const key = formatDateKey(day);
+        const count = sessions.reduce((acc, s) => {
+          const entryTime = tsToDate(s.entry_time);
+          if (!entryTime) return acc;
+          if (formatDateKey(startOfDay(entryTime)) === key) return acc + 1;
+          return acc;
+        }, 0);
+        return { key, count };
+      });
+      
+      const trendLabels = trendCounts.map(d => {
+        const date = new Date(d.key);
+        return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+      });
+      const trendData = trendCounts.map(d => d.count);
+      
+      if (trendChart) {
+        trendChart.data.labels = trendLabels;
+        trendChart.data.datasets[0].data = trendData;
+        trendChart.update();
+      } else {
+        const ctx = document.getElementById('sessionTrend').getContext('2d');
+        trendChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: trendLabels,
+            datasets: [{
+              label: 'Sessions',
+              data: trendData,
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { precision: 0 }
+              }
+            }
+          }
+        });
+      }
+
+      // Violation distribution chart
+      const violationMap = {};
+      alerts.forEach(a => {
+        const type = a.violation_type || 'Unknown';
+        violationMap[type] = (violationMap[type] || 0) + 1;
+      });
+      
+      const pieLabels = Object.keys(violationMap);
+      const pieData = pieLabels.map(label => violationMap[label]);
+      
+      if (pieChart) {
+        pieChart.data.labels = pieLabels;
+        pieChart.data.datasets[0].data = pieData;
+        pieChart.update();
+      } else {
+        const ctx2 = document.getElementById('eventDistribution').getContext('2d');
+        pieChart = new Chart(ctx2, {
+          type: 'doughnut',
+          data: {
+            labels: pieLabels,
+            datasets: [{
+              data: pieData,
+              backgroundColor: [
+                '#ef4444', // Red for violations
+                '#60a5fa', // Blue for warnings
+                '#10b981', // Green for info
+                '#f59e0b', // Yellow
+                '#8b5cf6'  // Purple
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Export functions
+    function showExportModal(type, data) {
+      exportType = type;
+      exportData = data;
+      modalTitle.textContent = type === 'csv' ? 'Export CSV Report' : 'Export PDF Report';
+      modalMessage.textContent = `Ready to download the ${type.toUpperCase()} report with ${data.filteredSessions.length} sessions.`;
+      exportModal.style.display = 'flex';
+    }
+
+    function exportCSV(reportData) {
+      const rows = [
+        ['Entry Time', 'Exit Time', 'Vehicle ID', 'Duration (minutes)', 'Zone', 'User Type']
+      ];
+      
+      reportData.filteredSessions.forEach(s => {
+        const entry = tsToDate(s.entry_time);
+        const exit = tsToDate(s.exit_time);
+        const duration = (entry && exit) ? ((exit - entry) / (1000 * 60)).toFixed(2) : 'Ongoing';
+        
+        rows.push([
+          entry ? entry.toISOString() : '',
+          exit ? exit.toISOString() : '',
+          s.vehicle_id || '',
+          duration,
+          s.assigned_zone || '',
+          s.owner_type || ''
+        ]);
+      });
+      
+      const csvContent = rows.map(row => 
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ).join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      const now = new Date();
+      link.download = `parking_report_${now.toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function exportPDF(reportData) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const now = new Date();
+      
+      // Title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.text("IIUM Parking Report", pageWidth / 2, 20, { align: "center" });
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Generated: ${now.toLocaleString('en-GB')}`, pageWidth / 2, 30, { align: "center" });
+      
+      // Summary
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary", 20, 45);
+      
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Date Range: ${document.getElementById('dateRange').selectedOptions[0].text}`, 20, 55);
+      doc.text(`Zone: ${document.getElementById('zone').value}`, 20, 60);
+      doc.text(`User Type: ${document.getElementById('userType').value}`, 20, 65);
+      doc.text(`Total Sessions: ${reportData.filteredSessions.filter(s => !s.exit_time).length} active`, 20, 70);
+      doc.text(`Enforcement Actions: ${reportData.filteredAlerts.length}`, 20, 75);
+      
+      // Table
+      const tableRows = reportData.filteredSessions.map(s => {
+        const entry = tsToDate(s.entry_time);
+        const exit = tsToDate(s.exit_time);
+        const duration = (entry && exit) ? ((exit - entry) / (1000 * 60)).toFixed(1) : 'Ongoing';
+        
+        return [
+          entry ? entry.toLocaleString('en-GB') : '-',
+          exit ? exit.toLocaleString('en-GB') : '-',
+          s.vehicle_id || '-',
+          s.assigned_zone || '-',
+          s.owner_type || '-',
+          duration
+        ];
+      });
+      
+      doc.autoTable({
+        startY: 85,
+        head: [['Entry Time', 'Exit Time', 'Vehicle ID', 'Zone', 'User Type', 'Duration (min)']],
+        body: tableRows,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 }
+      });
+      
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Page ${i} of ${pageCount} - Generated by IIUM RFID Smart Parking System`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "center" }
+        );
+      }
+      
+      doc.save(`IIUM_Parking_Report_${now.toISOString().slice(0,10)}.pdf`);
+    }
+
+    // Event listeners for export buttons
+    exportCsvBtn.addEventListener('click', () => {
+      const reportData = computeStats();
+      showExportModal('csv', reportData);
+    });
+
+    exportPdfBtn.addEventListener('click', () => {
+      const reportData = computeStats();
+      showExportModal('pdf', reportData);
+    });
+
+    // Filter change listeners
+    [dateRangeSelect, zoneSelect, userTypeSelect].forEach(select => {
+      select.addEventListener('change', computeStats);
+    });
+
+    // Firebase real-time listeners
+    onSnapshot(collection(db, 'PARKING_SESSION'), snapshot => {
+      sessions = snapshot.docs.map(doc => doc.data());
+      computeStats();
+    });
+
+    onSnapshot(collection(db, 'ALERTS'), snapshot => {
+      alerts = snapshot.docs.map(doc => doc.data());
+      computeStats();
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === exportModal) {
+        exportModal.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

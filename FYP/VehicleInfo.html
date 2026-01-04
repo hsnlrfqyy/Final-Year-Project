@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vehicle Info</title>
+  <style>
+        * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: #f5f5f5;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: #333;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 4px 0;
+      display: block;
+      transition: background 0.2s;
+      font-size: 16px;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #4f46e5;
+      color: white;
+    }
+
+    /* ===== RIGHT ===== */
+    .right {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== TOP BAR ===== */
+    .title-bar {
+      background: #f5f5f5;
+      color: #333;
+      padding: 14px 22px;
+      font-size: clamp(18px, 3vw, 25px);
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-left img {
+      height: 38px;
+      width: auto;
+    }
+
+    /* ===== PROFILE ===== */
+    .profile-container { position: relative; }
+
+    .profile-pic {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #4f46e5;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 50px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 120px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: #333;
+      font-size: 15px;
+    }
+
+    .dropdown-menu a:hover {
+      background: #4f46e5;
+      color: white;
+      border-radius: 8px;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* ===== HEADER ROW ===== */
+    .header-row {
+      display: column;
+      grid-template-columns: 1fr 250px 250px;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header-row h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      margin: 0;
+    }
+    .header-row p { color: #555; margin: 10px 0 20px 0;}
+    .filters {display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center;}
+    .filters input {flex: 2; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; min-width: 250px;}
+    .filters select {flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; min-width: 150px;}
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.05);}
+    th, td {padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 15px; vertical-align: middle;}
+    th { background: #f5f5f5; font-weight: bold; }
+    tr:hover { background: #f9f9f9; }
+    .status-pill {display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;}
+    .status-Active { background: #d4f8d4; color: #1f7a1f; }
+    .status-Inactive { background: #ffd6d6; color: #b22222; }
+    .status-Expired { background: #fff2cc; color: #b36d00; }
+    .action-history { display: inline-block; padding: 6px 10px; border-radius: 6px; background: #4f46e5; color: white; text-decoration: none; font-weight: 600; font-size: 13px; cursor: pointer;}
+    .pagination {margin-top: 15px; display: flex; justify-content: center; align-items: center; font-size: 16px; gap: 15px;}
+    .pagination button {padding: 8px 15px; border: 1px solid #ccc; border-radius: 6px; background: white; cursor: pointer; font-weight: bold;}
+    @media (max-width: 920px) {.layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .filters { flex-direction: column; }}
+    .modal {display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;}
+    .modal-content {background: white; padding: 20px; border-radius: 12px; width: 80%; max-width: 700px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); max-height: 80%;overflow-y: auto;}
+    .modal-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
+    .modal-header h2 {margin: 0;}
+    .close-modal {font-size: 24px; font-weight: bold; cursor: pointer;}
+    .modal table {width: 100%; border-collapse: collapse;}
+    .modal th, .modal td {padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 14px;}
+    .modal th {background: #f5f5f5; font-weight: bold;}
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="VehicleInfo.html" class="active">Vehicle Info</a>
+    <a href="Alerts.html">Alerts</a>
+    <a href="Reports.html">Reports</a>
+  </div>
+
+  <!-- Right Content -->
+  <div class="right">
+
+    <div class="title-bar">
+      <div class="title-left">
+        <img src="images/fyp-logo.png" alt="Logo" />
+        <span>RFID Smart Parking</span>
+      </div>
+
+      <div class="profile-container">
+        <img src="images/profile.png" alt="Profile" class="profile-pic" id="profilePic">
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="#" id="logoutLink">Logout</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="header-row">
+        <h1>Vehicle Information</h1>
+        <p>View and manage vehicle details and their access history.</p>
+      </div>
+
+      <div class="filters">
+        <input id="searchInput" type="text" placeholder="Search by Registration, Owner, Type or RFID..." />
+        <select id="filterRfid"><option value="">RFID Status</option></select>
+        <select id="filterZone"><option value="">Assigned Zone</option></select>
+        <select id="filterOwner"><option value="">Owner Type</option></select>
+      </div>
+
+      <table id="vehicleTable">
+        <thead>
+          <tr>
+            <th>Vehicle Registration</th>
+            <th>Owner Name</th>
+            <th>Owner Type</th>
+            <th>Assigned Zone</th>
+            <th>RFID Status</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="7" style="text-align:center; padding:20px;">Loading...</td></tr>
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <button id="prevBtn">&lt;</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextBtn">&gt;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalVehicleTitle">Vehicle History</h2>
+        <span class="close-modal" id="closeModal">&times;</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Zone</th>
+          </tr>
+        </thead>
+        <tbody id="modalTableBody">
+          <tr><td colspan="2" style="text-align:center;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZEK8mhES6mTDQYLvG3PVSGzuYwfCyx-Q",
+      authDomain: "iium-parking-database.firebaseapp.com",
+      projectId: "iium-parking-database",
+      storageBucket: "iium-parking-database.firebasestorage.app",
+      messagingSenderId: "73399677515",
+      appId: "1:73399677515:web:e8fb4cb0738a0007dd93ce",
+      measurementId: "G-GZ17Y9RC9Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const tableBody = document.getElementById("tableBody");
+    const searchInput = document.getElementById("searchInput");
+    const filterRfid = document.getElementById("filterRfid");
+    const filterZone = document.getElementById("filterZone");
+    const filterOwner = document.getElementById("filterOwner");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const pageInfo = document.getElementById("pageInfo");
+
+    const modal = document.getElementById("historyModal");
+    const modalVehicleTitle = document.getElementById("modalVehicleTitle");
+    const modalTableBody = document.getElementById("modalTableBody");
+    const closeModal = document.getElementById("closeModal");
+
+    // Profile elements
+    const profilePicEl = document.getElementById("profilePic");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    const logoutLink = document.getElementById("logoutLink");
+
+    let vehicles = [];
+    let filtered = [];
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
+    function formatTimestamp(ts) {
+      if (!ts) return "-";
+      if (ts.seconds !== undefined) {
+        const d = new Date(ts.seconds * 1000);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+      }
+      const d = new Date(ts);
+      return isNaN(d) ? String(ts) : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    }
+
+    function populateFilterOptions() {
+      const zones = Array.from(new Set(vehicles.map(v => v.assigned_zone).filter(Boolean))).sort();
+      const owners = Array.from(new Set(vehicles.map(v => v.owner_type).filter(Boolean))).sort();
+      const rfids = Array.from(new Set(vehicles.map(v => v.rfid_status).filter(Boolean))).sort();
+
+      filterZone.innerHTML = `<option value="">Assigned Zone</option>` + zones.map(z => `<option value="${z}">${z}</option>`).join("");
+      filterOwner.innerHTML = `<option value="">Owner Type</option>` + owners.map(o => `<option value="${o}">${o}</option>`).join("");
+      filterRfid.innerHTML = `<option value="">RFID Status</option>` + rfids.map(r => `<option value="${r}">${r}</option>`).join("");
+    }
+
+    function applyFilters() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const zoneVal = filterZone.value;
+      const ownerVal = filterOwner.value;
+      const rfidVal = filterRfid.value;
+
+      filtered = vehicles.filter(v => {
+        const fields = [
+          v.vehicle_id,
+          v.owner_name,
+          v.owner_type,
+          v.rfid_status,
+          v.assigned_zone
+        ].map(x => (x ? String(x).toLowerCase() : ""));
+        const matchesSearch = q === "" || fields.some(f => f.includes(q));
+        const matchesZone = !zoneVal || v.assigned_zone === zoneVal;
+        const matchesOwner = !ownerVal || v.owner_type === ownerVal;
+        const matchesRfid = !rfidVal || v.rfid_status === rfidVal;
+        return matchesSearch && matchesZone && matchesOwner && matchesRfid;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * rowsPerPage;
+      const pageData = filtered.slice(start, start + rowsPerPage);
+
+      if (pageData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:18px;">No results</td></tr>`;
+      } else {
+        tableBody.innerHTML = pageData.map(v => `
+          <tr>
+            <td>${v.vehicle_id || "-"}</td>
+            <td>${v.owner_name || "-"}</td>
+            <td>${v.owner_type || "-"}</td>
+            <td>${v.assigned_zone || "-"}</td>
+            <td><span class="status-pill status-${v.rfid_status?.replace(/\s+/g,'') || 'Unknown'}">${v.rfid_status || "-"}</span></td>
+            <td>${v.email || "-"}</td>
+            <td><span class="action-history" onclick="openHistoryModal('${v.vehicle_id}')">View Access Log</span></td>
+          </tr>`).join("");
+      }
+
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+
+    prevBtn.addEventListener("click", () => { if (currentPage > 1) currentPage--; renderTable(); });
+    nextBtn.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+      if (currentPage < totalPages) currentPage++; renderTable();
+    });
+
+    searchInput.addEventListener("input", applyFilters);
+    filterZone.addEventListener("change", applyFilters);
+    filterOwner.addEventListener("change", applyFilters);
+    filterRfid.addEventListener("change", applyFilters);
+
+    const vehiclesRef = collection(db, "VEHICLES");
+    onSnapshot(vehiclesRef, snapshot => {
+      vehicles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      vehicles.sort((a,b)=>( (b.last_access?.seconds||0) - (a.last_access?.seconds||0) ));
+      populateFilterOptions();
+      applyFilters();
+    });
+
+    // Profile dropdown
+    profilePicEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
+    window.addEventListener("click", (e) => {
+      if (!profilePicEl.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
+    });
+
+    // Logout handler
+    logoutLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Clear the session storage
+      sessionStorage.removeItem('userLoggedIn');
+      sessionStorage.removeItem('username');
+      
+      // Hide the dropdown menu
+      dropdownMenu.style.display = "none";
+      
+      // Redirect to login page
+      window.location.href = "LoginPage.html";
+    });
+
+    // Modal functions
+    closeModal.addEventListener("click", () => { modal.style.display = "none"; });
+    window.addEventListener("click", e => { if(e.target===modal) modal.style.display="none"; });
+
+    window.openHistoryModal = async function(vehicleId){
+      modalVehicleTitle.textContent = `Vehicle: ${vehicleId}`;
+      modalTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Loading...</td></tr>`;
+      modal.style.display = "flex";
+
+      try {
+        const historyRef = collection(db,"PARKING_SESSION");
+        const qSnap = query(historyRef, where("vehicle_id","==",vehicleId));
+        const snapshot = await getDocs(qSnap);
+        const historyData = snapshot.docs.map(doc => doc.data())
+          .sort((a,b)=> (b.entry_time?.seconds||0) - (a.entry_time?.seconds||0));
+
+        if(historyData.length===0){
+          modalTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No history available</td></tr>`;
+        } else {
+          modalTableBody.innerHTML = historyData.map(h => {
+            const ts = h.entry_time?.seconds ? formatTimestamp(h.entry_time) : h.entry_time || "-";
+            const zone = h.zone || h.assigned_zone || "-";
+            return `<tr><td>${ts}</td><td>${zone}</td></tr>`;
+          }).join("");
+        }
+      } catch(err){
+        modalTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Error loading history</td></tr>`;
+        console.error(err);
+      }
+    };
+  </script>
+</body>
+</html>

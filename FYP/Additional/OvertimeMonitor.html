@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Overtime Parking Monitor</title>
+  <style>
+    body {font-family: Arial, sans-serif; background: #f7f7fb; padding: 40px;}
+    .card { max-width: 620px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);}
+    h1 { margin-top: 0; }
+    button {padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; background: #dc2626; color: white;}
+    button:disabled {background: #ccc; cursor: not-allowed;}
+    .log {margin-top: 20px; background: #0b1220; color: #e6eef8; padding: 15px; border-radius: 8px; height: 240px; overflow-y: auto; font-size: 13px;}
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Overtime Parking Monitor</h1>
+  <p>
+    Click the button to scan parking sessions and generate alerts
+    based on parking duration thresholds.
+  </p>
+
+  <button id="scanBtn">Scan Parking Logs</button>
+
+  <div class="log" id="logBox">Ready.</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    where,
+    addDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZEK8mhES6mTDQYLvG3PVSGzuYwfCyx-Q",
+    authDomain: "iium-parking-database.firebaseapp.com",
+    projectId: "iium-parking-database"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const scanBtn = document.getElementById("scanBtn");
+  const logBox = document.getElementById("logBox");
+
+  function log(msg) {
+    const t = new Date().toLocaleTimeString();
+    logBox.textContent += `\n[${t}] ${msg}`;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function getSeverity(hours) {
+    if (hours >= 48 && hours < 168) return "Low";
+    if (hours >= 168 && hours < 672) return "Medium";
+    if (hours >= 672) return "High";
+    return null;
+  }
+
+  async function scanOvertimeParking() {
+    scanBtn.disabled = true;
+    log("🔍 Scanning parking sessions...");
+
+    let created = 0;
+
+    const parkingSnap = await getDocs(collection(db, "PARKING_SESSION"));
+
+    for (const snap of parkingSnap.docs) {
+      const p = snap.data();
+
+      // Must have entry time
+      if (!p.entry_time) continue;
+
+      const entry = p.entry_time.seconds
+        ? p.entry_time.seconds * 1000
+        : new Date(p.entry_time).getTime();
+
+      // If exit_time is null → use current time
+      const exit = p.exit_time
+        ? (p.exit_time.seconds
+            ? p.exit_time.seconds * 1000
+            : new Date(p.exit_time).getTime())
+        : Date.now();
+
+      const hours = (exit - entry) / (1000 * 60 * 60);
+      const severity = getSeverity(hours);
+
+      if (!severity) continue;
+
+      // Prevent duplicate alerts
+      const existsQuery = query(
+        collection(db, "ALERTS"),
+        where("vehicle_id", "==", p.vehicle_id),
+        where("violation_type", "==", "Overtime Parking")
+      );
+
+      const existsSnap = await getDocs(existsQuery);
+      if (!existsSnap.empty) continue;
+
+      await addDoc(collection(db, "ALERTS"), {
+        vehicle_id: p.vehicle_id,
+        assigned_zone: p.assigned_zone || "-",
+        email: p.email || "unknown@gmail.com",
+        violation_type: "Overtime Parking",
+        severity: severity,
+        status: "Active",
+        timestamp: new Date()
+      });
+
+      created++;
+      log(`🚨 ${severity} alert created for ${p.vehicle_id} (${hours.toFixed(1)} hrs)`);
+    }
+
+    log(`✅ Scan completed. ${created} new alerts generated.`);
+    scanBtn.disabled = false;
+  }
+
+  scanBtn.addEventListener("click", scanOvertimeParking);
+</script>
+
+</body>
+</html>
